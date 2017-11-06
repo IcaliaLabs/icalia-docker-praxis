@@ -1,24 +1,5 @@
-# README
+# Docker example with a Rails app: Simple App
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## The changes made to achieve "clone & run" with Docker
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+**TD;RL** You can see the changes to achieve the "clone & run" capability with Github's diff tool [HERE](https://github.com/IcaliaLabs/icalia-docker-praxis/compare/44af158...b6787cc)
