@@ -1,0 +1,39 @@
+# PostgreSQL. Versions 9.1 and up are supported.
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  # For details on connection pooling, see Rails configuration guide
+  # http://guides.rubyonrails.org/configuring.html#database-pooling
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+  # Minimum log levels, in increasing order:
+  #   debug5, debug4, debug3, debug2, debug1,
+  #   log, notice, warning, error, fatal, and panic
+  # Defaults to warning.
+  # min_messages: notice
+
+development:
+  <<: *default
+
+  # Inheriting from 'default', we'll let rails fallback to use the `DATABASE_URL` environment
+  # variable to fill in for the `database`, `username`, `password`, `host` and `port` entries
+  # typically specified here, in pretty much the same way Heroku does for production environments.
+
+  # However, the `schema_search_path` and `min_messages` keys wil be configured here.
+
+  # Schema search path. The server defaults to $user,public
+  # schema_search_path: myapp,sharedapp,public
+
+  min_messages: log
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+
+# Since we're already using the `DATABASE_URL` for our development and test environments, the
+# production environment shouldn't be different at all:
+production:
+  <<: *default

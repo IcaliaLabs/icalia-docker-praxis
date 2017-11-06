@@ -1,0 +1,68 @@
+version: '3.4'
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
+
+services:
+  postgres:
+    image: postgres:9.6-alpine
+    ports:
+      # We'll bind a hosts port to postgres's port 5432, so we can use our database IDEs with it:
+      - ${DOCKER_RAILS_EXAMPLE_SIMPLE_POSTGRES_PORT:-5432}:5432
+    volumes:
+      - ./db/dumps:/db/dumps                   # Mount the DB dumps folder
+      - ./tmp:/tmp                             # Mount tmp folder
+      - ./bin/restoredb:/bin/restoredb:ro      # Mount the 'restoredb' script
+      - ./bin/dumpdb:/bin/dumpdb:ro            # Mount the 'dumpdb' script
+      - postgres_data:/var/lib/postgresql/data # Mount the postgres data volume
+    networks:
+      - backend
+    environment:
+      POSTGRES_PASSWORD: 3x4mpl3
+
+  test: &app
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    image: icalialabs/docker-rails-example-simple:development
+    entrypoint: /usr/src/bin/entrypoint-dev
+    volumes:
+      # Mount our app code directory (".") into our app containers at the
+      # "/usr/src" folder:
+      - .:/usr/src
+
+    networks:
+      - backend
+
+    # Keep the stdin open, so we can attach to our app container's process
+    # and do things such as byebug, etc:
+    stdin_open: true
+
+    # Enable sending signals (CTRL+C, CTRL+P + CTRL+Q) into the container:
+    tty: true
+
+    depends_on:
+      - postgres
+
+    command: guard
+
+    environment: &app_env
+      # URL to connect to the database:
+      DATABASE_URL: postgres://postgres:3x4mpl3@postgres:5432/simple_test
+      RAILS_ENV: test
+      RACK_ENV: test
+      RAILS_LOG_TO_STDOUT: "true"
+
+  web:
+    <<: *app
+    command: rails server -p 3000 -b 0.0.0.0
+    ports:
+      - ${DOCKER_RAILS_EXAMPLE_SIMPLE_WEB_PORT:-3000}:3000
+    environment:
+      <<: *app_env
+      DATABASE_URL: postgres://postgres:3x4mpl3@postgres:5432/simple_development
+      RAILS_ENV: development
+      RACK_ENV: development

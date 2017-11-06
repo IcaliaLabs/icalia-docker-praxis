@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+# This script is used by this project's Docker development entrypoint script to check if the app
+# database (and any of the configured database schemas) exists, tripping out if they are missing.
+#
+# If this script trips out, the entrypoint script will then try to run the database setup. This is
+# part of the magic that allows us the "clone & run" configuration.
+require 'rubygems'
+require 'rake'
+require 'bundler'
+
+Bundler.setup(:default)
+
+require 'active_record'
+require 'erb'
+require 'yaml'
+
+def connection_to_database?
+  ActiveRecord::Base.establish_connection && ActiveRecord::Migrator.current_version
+end
+
+exit begin
+  connection_tries ||= 3
+
+  connection_to_database?
+
+  # Exit with code 0 if the execution made it up to this point:
+  exit 0
+rescue PG::ConnectionBad
+  unless (connection_tries -= 1).zero?
+    puts "Retrying DB connection #{connection_tries} more times..."
+    sleep ENV.fetch("APP_SETUP_WAIT", "5").to_i
+    retry
+  end
+  exit 1
+rescue ActiveRecord::NoDatabaseError
+  exit 2
+ensure
+  ActiveRecord::Base.clear_all_connections!
+end
