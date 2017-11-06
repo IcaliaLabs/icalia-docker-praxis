@@ -16,4 +16,30 @@
 /node_modules
 /yarn-error.log
 
-.byebug_history
+# Ignore OS artifacts:
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore Byebug/Bash/etc command history file.
+/.*_hist*
+
+# Ignore dotenv files, but not the dotenv examples:
+*.env
+!*example.env
+
+# Ignore IDE's and text editor artifacts:
+*.swp
+*.viminfo
+
+# Ignore RSpec example status persistence file:
+examples.txt
+
+# Ignore database dump files:
+/db/dumps/*
+!/db/dumps/README.md
+!/db/dumps/remote-dump

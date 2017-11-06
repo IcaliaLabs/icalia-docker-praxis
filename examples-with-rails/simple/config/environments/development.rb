@@ -45,6 +45,13 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # We'll direct the logger output to the STDOUT, so we can see the logs via Docker:
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    logger           = ActiveSupport::Logger.new(STDOUT)
+    logger.formatter = config.log_formatter
+    config.logger    = ActiveSupport::TaggedLogging.new(logger)
+  end
+
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
