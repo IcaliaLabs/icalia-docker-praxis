@@ -5,7 +5,7 @@ This is a collection of examples and notes about our Docker practices at Icalia 
 ## About Mentors
 
 We recommend you to identify the available platform mentors in the team so whenever you find a
-problem regarding Docker and the development technology your'e using, you know the right person to
+problem regarding Docker and the development technology you're using, you know the right person to
 help you with your issue:
 
 | Expertise         | Guru | Contact Email      |
