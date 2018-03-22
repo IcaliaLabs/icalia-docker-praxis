@@ -132,6 +132,11 @@ If your'e still having problems, ask for help to corresponding mentor (@vovimayh
 
 ### Docker for Windows
 
+#### Important Stuff
+
+These are the common problems we've encountered when using Docker for Windows. All of these are not with Docker for Windows itslef, but rather some gotchas found when working with diverse environments (Teams working with Windows and Linux):
+
+ * Make sure you are not using "automatic line-ending conversions" [See this one](http://willi.am/blog/2016/08/11/docker-for-windows-dealing-with-windows-line-endings/)
 #### General Considerations
 
 * Docker for Windows will only work for Windows 10 Pro, which contains the Hyper-V hypervisor.
