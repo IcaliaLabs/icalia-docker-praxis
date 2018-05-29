@@ -51,76 +51,72 @@ for more info)
 
 These are the steps to configure your Docker daemon this way:
 
-1. Prune all your current Docker images, containers and volumes
+1. Prune all your current Docker images, containers and volumes:
 
-  Once the remap configuration is active, you'll no longer be able to access (via `docker`) your
-  existing images, containers and volumes, adding up to your workstation's "unreclaimable" disk space.
-  It's better to prune all of that out:
+    Once the remap configuration is active, you'll no longer be able to access (via `docker`)
+    your existing images, containers and volumes, adding up to your workstation's
+    "unreclaimable" disk space. It's better to prune all of that out:
 
-  ```
-  docker system prune --all --force --volumes
-  ```
+    ```bash
+    docker system prune --all --force --volumes
+    ```
 
-2. Make sure you know your user ID and group ID on your host:
+2. Create or Replace the `/etc/subuid` and `/etc/subgid` files:
 
-  ```bash
-  # be sure to put your username here, or omit it:
-  id testuser
-  uid=1000(testuser) gid=1000(testuser) ...
-  ```
+    These files define the mapping as an offset between the host `uid`/`gid` and the container
+    processes' `uid`/`gid`.
 
-3. Next, you'll need to edit the `/etc/subuid` and `/etc/subgid` files, which define the id
-mapping as an offset between the host uid/gid and the container processes' uid/gid. Notice how some
-linux distros may have these files already created by default. Also, keep in mind that
+    ```bash
+    echo "$(id -un):$(id -u):65536" | sudo tee /etc/subuid
+    # Example Output:
+    # testuser:1000:65536
 
-  ```
-  # at /etc/subuid: match the second column (separated by colons) to your user id
-  testuser:1000:65536
+    echo "$(id -gn):$(id -g):65536" | sudo tee /etc/subgid
+    # Example Output:
+    # testuser:1000:65536
+    ```
 
-  # at /etc/subgid: match the second column (separated by colons) to your group id
-  testuser:1000:65536
-  ```
+    The entries that will be saved in these files mean that for the current user, the
+    subprocess' `uid`/`gid` will be an offset of the host's `uid`/`gid`, and only applies for
+    the following 65536 `uid`s/`gid`s:
 
-  These entries mean that for the `testuser`, the subprocess `uid` will be an offset of the host's
-  `uid`, and only applies for the following 65536 uids:
+      * The container's `root` user, having the `0` uid will be remapped to the host's uid of
+        the current user.
+      * If there's some other user in the container having a `500` uid, it will be remapped
+        to the host's `1500` uid, while the container user having the `501` uid will be remapped to the host's `1501` uid.
 
-  * The container's `root` user, having the `0` uid will be remapped to the host's `1000` uid, which
-    belongs the host's `testuser` user.
-  * If there's some other user in the container, having a `500` uid, it will be remapped to the
-    host's `1500` uid, while the container user having the `501` uid will be remapped to the host's
-    `1501` uid.
+3. Now, you'll need to configure your host's Docker engine to apply the remapping:
 
-4. Now, you'll need to configure your host's Docker engine to apply the remapping in the config file
-at `/etc/docker/daemon.json` (not present by default):
+    ```bash
+    echo "{\n  \"userns-remap\" : \"$(id -un)\"\n}" | sudo tee /etc/docker/daemon.json
+    # Example Output:
+    # {
+    #   "userns-remap" : "testuser"
+    # }
+    ```
 
-  ```
-  {
-    "userns-remap" : "testuser"
-  }
-  ```
+4. Be sure to restart your Docker daemon:
 
-5. Be sure to restart your Docker daemon:
+    ```bash
+    sudo service docker restart
+    ```
 
-  ```
-  sudo service docker restart
-  ```
+5. Finally, test that the files generated within the container have the correct owner on
+the host (your user):
 
-6. Finally, test that the files generated within the container have the correct owner on the host (
-your user):
+    ```bash
+    # Run it from within your desktop, bind-mounting it into the container:
+    cd ~/Desktop && docker run --rm -ti -v $(pwd):/my-desktop -w /my-desktop alpine ash
 
-  ```
-  # Run it from within your desktop, bind-mounting it into the container:
-  cd ~/Desktop && docker run --rm -ti -v $(pwd):/my-desktop -w /my-desktop alpine ash
+    # Once inside the container - be sure no 'permission denied' error appears:
+    echo "TEST" > test.txt
 
-  # Once inside the container - be sure no 'permission denied' error appears:
-  echo "TEST" > test.txt
+    # Exit the container:
+    exit
 
-  # Exit the container:
-  exit
-
-  # Once your'e back to your host, check that the created file belongs to your user & group:
-  ls -lah
-  ```
+    # Once your'e back to your host, check that the created file belongs to your user & group:
+    ls -lah
+    ```
 
 If something here didn't go as planned, please check:
 
