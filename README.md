@@ -137,6 +137,25 @@ If your'e still having problems, ask for help to corresponding mentor (@vovimayh
 These are the common problems we've encountered when using Docker for Windows. All of these are not with Docker for Windows itslef, but rather some gotchas found when working with diverse environments (Teams working with Windows and Linux):
 
  * Make sure you are not using "automatic line-ending conversions" [See this one](http://willi.am/blog/2016/08/11/docker-for-windows-dealing-with-windows-line-endings/)
+ 
+ * **Avoid having extension-less executable scripts on source code**: A common rule fo `.gitattributes` files to fix the problem is `*.sh text eol=lf`. Even having this rule, you might still get in trouble if there are scripts without the `.sh` extension. Ensure all scripts intended to run on linux containers end with \*.sh. If you require them to not have the extension *inside the container* (i.e. `restoredb` and `dumpdb`), you can change that with a custom volume mapping:
+
+```yaml
+version: "2.4"
+
+volumes:
+  postgres_data:
+
+services:
+  postgres:
+    image: postgres:10-alpine
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    - ./bin/dumpdb.sh:/usr/local/bin/dumpdb:ro
+    - ./bin/restoredb.sh:/usr/local/bin/restoredb:ro
+    - ./db/dumps:/db/dumps
+```
+
 #### General Considerations
 
 * Docker for Windows will only work for Windows 10 Pro, which contains the Hyper-V hypervisor.
